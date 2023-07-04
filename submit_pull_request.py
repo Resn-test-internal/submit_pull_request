@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sys
+
 from github import Github
 
 GITHUB_ACCESS_TOKEN = os.environ['GITHUB_ACCESS_TOKEN']
@@ -81,7 +82,7 @@ class SubmitPullRequest():
             return pr
         except:
             self.error_handler("Failed to create pull request")
-
+    
     def error_handler(self, message):
         print('\033[31m' + message + '\033[0m')
         raise Exception
@@ -130,12 +131,7 @@ class SubmitPullRequest():
         if branch.startswith("revert"):
             self.message_handler("Do not create a PR for revert branch")
 
-        m = re.findall(r'/\d+', GITHUB_REF)
-        try:
-            branch_id = int(m[-1][1:])
-            return branch_id
-        except:
-            self.error_handler("Branch name is incorrect")
+        return 1
 
     def replace_tag_to_issue_information(self, content):
         if '{submit_pull_request_issue_info}' in content:
