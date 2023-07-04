@@ -81,6 +81,8 @@ class SubmitPullRequest():
         try:
             contents = self.repo.get_contents(TEMPLATE_FILE_PATH)
             contents = base64.b64decode(contents.content).decode('utf8', 'ignore')
+            print(TEMPLATE_FILE_PATH)
+            print(contents)
             return contents
         except:
             return ''
