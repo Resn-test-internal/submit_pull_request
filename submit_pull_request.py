@@ -20,6 +20,13 @@ LABEL_SAME_AS_ISSUE = os.environ['LABEL_SAME_AS_ISSUE'].lower() == "true" if "LA
 MILESTONE_SAME_AS_ISSUE = os.environ['MILESTONE_SAME_AS_ISSUE'].lower() == "true" if "MILESTONE_SAME_AS_ISSUE" in os.environ else True
 TEMPLATE_FILE_PATH = os.environ['TEMPLATE_FILE_PATH'] if "TEMPLATE_FILE_PATH" in os.environ else ".github/pull_request_template.md"
 
+print(GITHUB_REPOSITORY)
+print(GITHUB_REF)
+print(GITHUB_REF)
+
+
+
+
 
 class SubmitPullRequest():
     def __init__(self):
@@ -118,6 +125,8 @@ class SubmitPullRequest():
 
     def parse_branch_id(self):
         branch = re.sub(r'^([^\/]+\/){2}', "", GITHUB_REF)
+
+        print(branch)
         if branch.startswith("revert"):
             self.message_handler("Do not create a PR for revert branch")
 
