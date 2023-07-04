@@ -21,23 +21,14 @@ LABEL_SAME_AS_ISSUE = os.environ['LABEL_SAME_AS_ISSUE'].lower() == "true" if "LA
 MILESTONE_SAME_AS_ISSUE = os.environ['MILESTONE_SAME_AS_ISSUE'].lower() == "true" if "MILESTONE_SAME_AS_ISSUE" in os.environ else True
 TEMPLATE_FILE_PATH = os.environ['TEMPLATE_FILE_PATH'] if "TEMPLATE_FILE_PATH" in os.environ else ".github/pull_request_template.md"
 
-print(GITHUB_REPOSITORY)
-print(GITHUB_REF)
-print(GITHUB_REF)
-
-
-
-
 
 class SubmitPullRequest():
     def __init__(self):
-        self.branch_id = self.parse_branch_id()
+        self.branch = self.parse_branch()
         self.repo = Github(self.get_access_token()).get_repo(GITHUB_REPOSITORY)
-        self.issue = self.get_issue()
         self.pr_body = self.build_pr_body()
         self.pr = self.create_pull_request()
         self.add_label_to_pull_request()
-        self.add_milestone_to_pull_request()
         self.add_assignees_to_pull_request()
 
     def add_assignees_to_pull_request(self):
@@ -49,32 +40,19 @@ class SubmitPullRequest():
 
     def add_label_to_pull_request(self):
         try:
-            if LABEL_SAME_AS_ISSUE:
-                for label in self.issue.labels:
-                    self.pr.add_to_labels(label.name)
             for label in (set(LABEL) & set([x.name for x in self.repo.get_labels()])):
                 self.pr.add_to_labels(label)
         except:
             self.error_handler("Failed to add label to pull request")
 
-    def add_milestone_to_pull_request(self):
-        try:
-            if MILESTONE_SAME_AS_ISSUE:
-                self.repo.get_issue(self.pr.number).edit(milestone=self.issue.milestone)
-        except:
-            self.error_handler("Failed to add milestone to pull request")
-
     def build_pr_body(self):
-        template_content = self.get_template_content()
-        return self.replace_tag_to_issue_information(template_content)
+        return self.get_template_content()
 
     def create_pull_request(self):
         try:
-            issue_number = self.issue.number
-            title = self.issue.title
-            pr_title = "ref #{} {}".format(issue_number, title)
+            title = self.branch
             pr = self.repo.create_pull(
-                title=pr_title,
+                title=title,
                 body=self.pr_body,
                 head=GITHUB_REF,
                 base=self.repo.default_branch,
@@ -99,19 +77,6 @@ class SubmitPullRequest():
         else:
             self.error_handler("Bots cannot make PR")
 
-    def get_issue(self):
-        try:
-            issue = self.repo.get_issue(self.branch_id)
-        except:
-            if DEBUG:
-                issue = IssueMock()
-            else:
-                self.error_handler("Failed to get the issue")
-        if issue:
-            return issue
-        else:
-            self.error_handler("No corresponding issue")
-
     def get_template_content(self):
         try:
             contents = self.repo.get_contents(TEMPLATE_FILE_PATH)
@@ -124,23 +89,9 @@ class SubmitPullRequest():
         print('\033[32m' + message + '\033[0m')
         sys.exit()
 
-    def parse_branch_id(self):
+    def parse_branch(self):
         branch = re.sub(r'^([^\/]+\/){2}', "", GITHUB_REF)
-
-        print(branch)
-        if branch.startswith("revert"):
-            self.message_handler("Do not create a PR for revert branch")
-
-        return 1
-
-    def replace_tag_to_issue_information(self, content):
-        if '{submit_pull_request_issue_info}' in content:
-            issue_number = self.issue.number
-            title = self.issue.title
-            issue_info = "ref #{} {}\n".format(issue_number, title)
-            return content.format(submit_pull_request_issue_info=issue_info)
-        else:
-            return content
+        return branch
 
 
 class IssueMock:
